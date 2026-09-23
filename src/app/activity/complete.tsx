@@ -1,7 +1,9 @@
 import {
+  completeDraftSubmission,
   getDraftById,
   saveActivitySubmission,
   saveDraftSubmission,
+  updateDraftSubmission,
 } from '@/services/database';
 import { syncPendingSubmissions } from '@/services/sync';
 import NetInfo from '@react-native-community/netinfo';
@@ -147,13 +149,23 @@ async function takePhoto() {
 
   async function handleSaveDraft() {
     try {
-      await saveDraftSubmission(
-        id ? String(id) : 'unknown',
-        observation.trim(),
-        photoUri,
-        location?.coords.latitude ?? null,
-        location?.coords.longitude ?? null
-      );
+      if (draftId) {
+        await updateDraftSubmission(
+          Number(draftId),
+          observation.trim(),
+          photoUri,
+          location?.coords.latitude ?? null,
+          location?.coords.longitude ?? null
+        );
+      } else {
+        await saveDraftSubmission(
+          id ? String(id) : 'unknown',
+          observation.trim(),
+          photoUri,
+          location?.coords.latitude ?? null,
+          location?.coords.longitude ?? null
+        );
+      }
 
       Alert.alert(
         'Draft Saved',
@@ -201,13 +213,23 @@ async function takePhoto() {
     }
 
     try {
-        await saveActivitySubmission(
-          id ?? 'unknown',
-          observation.trim(),
-          photoUri,
-          location?.coords.latitude ?? null,
-          location?.coords.longitude ?? null
-        );
+        if (draftId) {
+          await completeDraftSubmission(
+            Number(draftId),
+            observation.trim(),
+            photoUri,
+            location?.coords.latitude ?? null,
+            location?.coords.longitude ?? null
+          );
+        } else {
+          await saveActivitySubmission(
+            id ?? 'unknown',
+            observation.trim(),
+            photoUri,
+            location?.coords.latitude ?? null,
+            location?.coords.longitude ?? null
+          );
+        }
 
         // Check internet immediately after saving
         const networkState = await NetInfo.fetch();

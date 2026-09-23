@@ -120,6 +120,72 @@ export async function saveDraftSubmission(
   console.log('Draft saved successfully.');
 }
 
+export async function updateDraftSubmission(
+  draftId: number,
+  observation: string,
+  photoUri: string | null,
+  latitude: number | null,
+  longitude: number | null
+) {
+  const db = await dbPromise;
+
+  await db.runAsync(
+    `
+    UPDATE activity_submissions
+    SET
+      observation = ?,
+      photo_uri = ?,
+      latitude = ?,
+      longitude = ?
+    WHERE id = ?
+      AND submission_status = 'DRAFT'
+    `,
+    [
+      observation || '',
+      photoUri || '',
+      latitude,
+      longitude,
+      draftId,
+    ]
+  );
+
+  console.log('Draft updated successfully:', draftId);
+}
+
+export async function completeDraftSubmission(
+  draftId: number,
+  observation: string,
+  photoUri: string,
+  latitude: number | null,
+  longitude: number | null
+) {
+  const db = await dbPromise;
+
+  await db.runAsync(
+    `
+    UPDATE activity_submissions
+    SET
+      observation = ?,
+      photo_uri = ?,
+      latitude = ?,
+      longitude = ?,
+      submission_status = 'COMPLETED',
+      sync_status = 'PENDING'
+    WHERE id = ?
+      AND submission_status = 'DRAFT'
+    `,
+    [
+      observation,
+      photoUri,
+      latitude,
+      longitude,
+      draftId,
+    ]
+  );
+
+  console.log('Draft completed successfully:', draftId);
+}
+
 export async function getAllSubmissions() {
   const db = await dbPromise;
 
