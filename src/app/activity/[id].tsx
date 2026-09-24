@@ -1,4 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { getDraftByActivityId } from '@/services/database';
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+} from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -38,7 +44,33 @@ const activities = {
 export default function ActivityDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  const [draftId, setDraftId] = useState<number | null>(null);
+
   const activity = activities[id as keyof typeof activities];
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadDraft() {
+        if (!id) return;
+
+        try {
+          const draft = await getDraftByActivityId(id);
+
+          if (draft) {
+            setDraftId(draft.id);
+            console.log('Existing draft found:', draft.id);
+          } else {
+            setDraftId(null);
+            console.log('No existing draft found.');
+          }
+        } catch (error) {
+          console.error('Failed to check for existing draft:', error);
+        }
+      }
+
+      loadDraft();
+    }, [id])
+  );
 
   if (!activity) {
     return (
@@ -97,12 +129,17 @@ export default function ActivityDetailsScreen() {
         ]}
           onPress={() =>
             router.push({
-                pathname: '/activity/complete',
-                params: { id },
+              pathname: '/activity/complete',
+              params: {
+                id,
+                ...(draftId ? { draftId: String(draftId) } : {}),
+              },
             })
-        }
+          }
         >
-          <Text style={styles.startButtonText}>Start Activity</Text>
+          <Text style={styles.startButtonText}>
+            {draftId ? 'Continue Activity' : 'Start Activity'}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

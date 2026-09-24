@@ -229,6 +229,31 @@ export async function getDraftById(id: number) {
   );
 }
 
+export async function getDraftByActivityId(activityId: string) {
+  const db = await dbPromise;
+
+  return db.getFirstAsync<ActivitySubmission>(
+    `
+    SELECT
+      id,
+      activity_id AS activityId,
+      observation,
+      photo_uri AS photoUri,
+      latitude,
+      longitude,
+      sync_status AS syncStatus,
+      submission_status AS submissionStatus,
+      created_at AS createdAt
+    FROM activity_submissions
+    WHERE activity_id = ?
+      AND submission_status = 'DRAFT'
+    ORDER BY id DESC
+    LIMIT 1
+    `,
+    [activityId]
+  );
+}
+
 export async function getPendingSubmissions() {
   const db = await dbPromise;
 
