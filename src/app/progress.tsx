@@ -21,6 +21,13 @@ import {
 export default function ProgressScreen() {
   const [submissions, setSubmissions] = useState<ActivitySubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const inProgressSubmissions = submissions.filter(
+    (submission) => submission.submissionStatus === 'DRAFT'
+  );
+
+  const completedSubmissions = submissions.filter(
+    (submission) => submission.submissionStatus === 'COMPLETED'
+  );
 
   async function loadSubmissions() {
     try {
@@ -81,7 +88,12 @@ export default function ProgressScreen() {
             </Text>
           </View>
         ) : (
-          submissions.map((submission) => (
+        <>
+          {inProgressSubmissions.length > 0 && (
+            <Text style={styles.sectionTitle}>In Progress</Text>
+          )}
+
+          {inProgressSubmissions.map((submission) => (
             <View key={submission.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.activityName}>
@@ -114,7 +126,9 @@ export default function ProgressScreen() {
               <Text style={styles.value}>{submission.observation}</Text>
 
               <Text style={styles.label}>Evidence</Text>
-              <Text style={styles.value}>✓ Photo saved</Text>
+              <Text style={styles.value}>
+                {submission.photoUri ? '✓ Photo saved' : 'No photo added yet'}
+              </Text>
 
               {submission.photoUri ? (
                 <Image
@@ -155,14 +169,84 @@ export default function ProgressScreen() {
               )}
               
               {submissions.some(
-                (submission) => submission.syncStatus === 'PENDING'
+                (submission) =>
+                  submission.submissionStatus === 'COMPLETED' &&
+                  submission.syncStatus === 'PENDING'
               ) && (
                 <Pressable style={styles.syncButton} onPress={handleSync}>
                   <Text style={styles.syncButtonText}>☁️ Sync Now</Text>
                 </Pressable>
               )}
             </View>
-          ))
+          ))}
+
+          {completedSubmissions.length > 0 && (
+            <Text style={styles.sectionTitle}>Completed</Text>
+          )}
+
+          {completedSubmissions.map((submission) => (
+            <View key={submission.id} style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.activityName}>
+                  {submission.activityId === 'plant-observation'
+                    ? 'Local Plant Observation'
+                    : 'Community Learning Observation'}
+                </Text>
+
+                <View
+                  style={[
+                    styles.statusBadge,
+                    submission.syncStatus === 'SYNCED'
+                      ? styles.syncedBadge
+                      : styles.pendingBadge,
+                  ]}
+                >
+                  <Text style={styles.statusText}>
+                    {submission.syncStatus === 'SYNCED'
+                      ? 'SYNCED'
+                      : 'PENDING SYNC'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.label}>Observation</Text>
+              <Text style={styles.value}>{submission.observation}</Text>
+
+              <Text style={styles.label}>Evidence</Text>
+              <Text style={styles.value}>
+                {submission.photoUri ? '✓ Photo saved' : 'No photo saved'}
+              </Text>
+
+              {submission.photoUri ? (
+                <Image
+                  source={{ uri: submission.photoUri }}
+                  style={styles.evidenceImage}
+                  resizeMode="cover"
+                />
+              ) : null}
+
+              {submission.latitude !== null &&
+                submission.longitude !== null && (
+                  <>
+                    <Text style={styles.label}>Location</Text>
+                    <Text style={styles.value}>✓ GPS location saved</Text>
+                  </>
+                )}
+
+              <Text style={styles.date}>
+                Saved: {new Date(submission.createdAt).toLocaleString()}
+              </Text>
+            </View>
+          ))}
+
+          {completedSubmissions.some(
+            (submission) => submission.syncStatus === 'PENDING'
+          ) && (
+            <Pressable style={styles.syncButton} onPress={handleSync}>
+              <Text style={styles.syncButtonText}>☁️ Sync All Pending</Text>
+            </Pressable>
+          )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -304,5 +388,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#172554',
+    marginBottom: 12,
+    marginTop: 4,
   },
 });
