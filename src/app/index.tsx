@@ -204,7 +204,21 @@ export default function HomeScreen() {
         </View>
 
         {recentSubmission ? (
-          <Pressable onPress={() => router.push('/progress')}>
+          <Pressable
+            onPress={() => {
+              if (recentSubmission.submissionStatus === 'DRAFT') {
+                router.push({
+                  pathname: '/activity/complete',
+                  params: {
+                    id: recentSubmission.activityId,
+                    draftId: String(recentSubmission.id),
+                  },
+                });
+              } else {
+                router.push('/progress');
+              }
+            }}
+          >
             <View style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>🌱</Text>
 
@@ -219,15 +233,26 @@ export default function HomeScreen() {
               <Text
                 style={[
                   styles.recentStatus,
-                  recentSubmission.syncStatus === 'SYNCED'
-                    ? styles.syncedStatus
-                    : styles.pendingStatus,
+                  recentSubmission.submissionStatus === 'DRAFT'
+                    ? styles.draftStatus
+                    : recentSubmission.syncStatus === 'SYNCED'
+                      ? styles.syncedStatus
+                      : styles.pendingStatus,
                 ]}
               >
-                {recentSubmission.syncStatus === 'SYNCED'
-                  ? '✓ SYNCED'
-                  : '⏳ PENDING SYNC'}
+                {recentSubmission.submissionStatus === 'DRAFT'
+                  ? '◷ IN PROGRESS'
+                  : recentSubmission.syncStatus === 'SYNCED'
+                    ? '✓ SYNCED'
+                    : '⏳ PENDING SYNC'}
               </Text>
+
+              {recentSubmission.submissionStatus === 'DRAFT' && (
+                <View style={styles.continueHint}>
+                  <Text style={styles.continueHintText}>Continue Activity →</Text>
+                </View>
+              )}
+
             </View>
           </Pressable>
         ) : (
@@ -449,5 +474,20 @@ const styles = StyleSheet.create({
   pendingStatus: {
     color: '#854D0E',
     backgroundColor: '#FEF3C7',
+  },
+
+  draftStatus: {
+    backgroundColor: '#DBEAFE',
+    color: '#1E40AF',
+  },
+  continueHint: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+
+  continueHintText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2563EB',
   },
 });
