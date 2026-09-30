@@ -1,10 +1,41 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ActivityCard from '@/components/ActivityCard';
+import { getDraftByActivityId } from '@/services/database';
 
 export default function ActivitiesScreen() {
+  const [plantDraftId, setPlantDraftId] = useState<number | null>(null);
+  const [communityDraftId, setCommunityDraftId] = useState<number | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadDrafts() {
+        try {
+          const plantDraft =
+            await getDraftByActivityId('plant-observation');
+
+          const communityDraft =
+            await getDraftByActivityId('community-observation');
+
+          setPlantDraftId(plantDraft?.id ?? null);
+          setCommunityDraftId(communityDraft?.id ?? null);
+
+          console.log('Activity drafts:', {
+            plant: plantDraft?.id ?? null,
+            community: communityDraft?.id ?? null,
+          });
+        } catch (error) {
+          console.error('Failed to load activity drafts:', error);
+        }
+      }
+
+      loadDrafts();
+    }, [])
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -24,12 +55,23 @@ export default function ActivitiesScreen() {
           requiresPhoto
           requiresLocation
           offlineSupported
-          onPress={() =>
-            router.push({
-              pathname: '/activity/[id]',
-              params: { id: 'plant-observation' },
-            })
-          }
+          inProgress={plantDraftId !== null}
+          onPress={() => {
+            if (plantDraftId) {
+              router.push({
+                pathname: '/activity/complete',
+                params: {
+                  id: 'plant-observation',
+                  draftId: String(plantDraftId),
+                },
+              });
+            } else {
+              router.push({
+                pathname: '/activity/[id]',
+                params: { id: 'plant-observation' },
+              });
+            }
+          }}
         />
 
         <ActivityCard
@@ -38,12 +80,23 @@ export default function ActivitiesScreen() {
           description="Observe an educational or community facility and record what you learned from the visit."
           requiresPhoto
           offlineSupported
-          onPress={() =>
-            router.push({
-              pathname: '/activity/[id]',
-              params: { id: 'community-observation' },
-            })
-          }
+          inProgress={communityDraftId !== null}
+          onPress={() => {
+            if (communityDraftId) {
+              router.push({
+                pathname: '/activity/complete',
+                params: {
+                  id: 'community-observation',
+                  draftId: String(communityDraftId),
+                },
+              });
+            } else {
+              router.push({
+                pathname: '/activity/[id]',
+                params: { id: 'community-observation' },
+              });
+            }
+          }}
         />
       </ScrollView>
     </SafeAreaView>

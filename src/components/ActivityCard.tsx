@@ -7,6 +7,7 @@ type ActivityCardProps = {
   requiresPhoto?: boolean;
   requiresLocation?: boolean;
   offlineSupported?: boolean;
+  inProgress?: boolean;
   onPress: () => void;
 };
 
@@ -17,11 +18,18 @@ export default function ActivityCard({
   requiresPhoto = false,
   requiresLocation = false,
   offlineSupported = false,
+  inProgress = false,
   onPress,
 }: ActivityCardProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.category}>{category}</Text>
+
+      {inProgress && (
+        <View style={styles.progressBadge}>
+          <Text style={styles.progressBadgeText}>IN PROGRESS</Text>
+        </View>
+      )}
 
       <Text style={styles.title}>{title}</Text>
 
@@ -48,7 +56,9 @@ export default function ActivityCard({
         ]}
         onPress={onPress}
       >
-        <Text style={styles.buttonText}>View Activity</Text>
+        <Text style={styles.buttonText}>
+          {inProgress ? 'Continue Activity' : 'View Activity'}
+        </Text>
       </Pressable>
     </View>
   );
@@ -110,5 +120,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,
+  },
+  progressBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+
+  progressBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1E40AF',
   },
 });
