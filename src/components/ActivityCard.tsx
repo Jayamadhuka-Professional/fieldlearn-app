@@ -8,6 +8,7 @@ type ActivityCardProps = {
   requiresLocation?: boolean;
   offlineSupported?: boolean;
   inProgress?: boolean;
+  testID?: string;
   onPress: () => void;
 };
 
@@ -19,6 +20,7 @@ export default function ActivityCard({
   requiresLocation = false,
   offlineSupported = false,
   inProgress = false,
+  testID,
   onPress,
 }: ActivityCardProps) {
   return (
@@ -50,6 +52,8 @@ export default function ActivityCard({
       </View>
 
       <Pressable
+        testID={testID}
+        accessibilityLabel={title}
         style={({ pressed }) => [
           styles.button,
           pressed && styles.buttonPressed,

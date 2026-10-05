@@ -1,6 +1,9 @@
 import { syncPendingSubmissions } from '@/services/sync';
+
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+
+import { useCallback, useEffect, useState } from 'react';
+
 import {
   ActivityIndicator,
   Alert,
@@ -48,6 +51,26 @@ export default function ProgressScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    const refreshInterval = setInterval(async () => {
+      try {
+        const data = await getAllSubmissions();
+        setSubmissions(data);
+      } catch (error) {
+        console.error(
+          'Failed to refresh progress submissions:',
+          error
+        );
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, []);
+
+  
+
   async function handleSync() {
     const result = await syncPendingSubmissions();
 
@@ -69,7 +92,10 @@ export default function ProgressScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      testID="progress-screen"
+      style={styles.safeArea}
+    >
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Saved Progress</Text>
 
@@ -151,6 +177,8 @@ export default function ProgressScreen() {
               </Text>
               {submission.submissionStatus === 'DRAFT' && (
                 <Pressable
+                  testID={`continue-draft-${submission.id}`}
+                  accessibilityLabel="Continue Activity"
                   style={styles.continueButton}
                   onPress={() =>
                     router.push({
@@ -173,7 +201,12 @@ export default function ProgressScreen() {
                   submission.submissionStatus === 'COMPLETED' &&
                   submission.syncStatus === 'PENDING'
               ) && (
-                <Pressable style={styles.syncButton} onPress={handleSync}>
+                <Pressable
+                  testID="progress-sync-all-button"
+                  accessibilityLabel="Sync All Pending"
+                  style={styles.syncButton}
+                  onPress={handleSync}
+                >
                   <Text style={styles.syncButtonText}>☁️ Sync Now</Text>
                 </Pressable>
               )}
@@ -201,7 +234,11 @@ export default function ProgressScreen() {
                       : styles.pendingBadge,
                   ]}
                 >
-                  <Text style={styles.statusText}>
+                  <Text
+                    testID={`submission-status-${submission.id}`}
+                    accessibilityLabel={`Submission ${submission.id} ${submission.syncStatus}`}
+                    style={styles.statusText}
+                  >
                     {submission.syncStatus === 'SYNCED'
                       ? 'SYNCED'
                       : 'PENDING SYNC'}
@@ -242,7 +279,12 @@ export default function ProgressScreen() {
           {completedSubmissions.some(
             (submission) => submission.syncStatus === 'PENDING'
           ) && (
-            <Pressable style={styles.syncButton} onPress={handleSync}>
+            <Pressable
+              testID="progress-sync-all-button"
+              accessibilityLabel="Sync All Pending"
+              style={styles.syncButton}
+              onPress={handleSync}
+            >
               <Text style={styles.syncButtonText}>☁️ Sync All Pending</Text>
             </Pressable>
           )}

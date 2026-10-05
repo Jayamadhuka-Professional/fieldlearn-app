@@ -13,11 +13,11 @@ const activities = {
     category: 'ENVIRONMENT',
     title: 'Local Plant Observation',
     description:
-      'Identify and document three different plants in your area using photos and short observations.',
+      'Observe and document a plant in your local area using a photo, location and a short observation.',
     instructions: [
-      'Find three different plants in your local area.',
-      'Observe the visible characteristics of each plant.',
-      'Take at least one photo as evidence.',
+      'Find a plant in your local area.',
+      'Observe the visible characteristics of the plant.',
+      'Take a photo as evidence.',
       'Write a short observation about what you discovered.',
       'Record your location when completing the activity.',
     ],
@@ -123,10 +123,12 @@ export default function ActivityDetailsScreen() {
         </View>
 
         <Pressable
+          testID="activity-start-button"
+          accessibilityLabel={draftId ? 'Continue Activity' : 'Start Activity'}
           style={({ pressed }) => [
             styles.startButton,
             pressed && styles.buttonPressed,
-        ]}
+          ]}
           onPress={() =>
             router.push({
               pathname: '/activity/complete',

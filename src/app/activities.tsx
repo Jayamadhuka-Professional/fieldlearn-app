@@ -49,9 +49,10 @@ export default function ActivitiesScreen() {
         </Text>
 
         <ActivityCard
+          testID="activity-plant-button"
           category="ENVIRONMENT"
           title="Local Plant Observation"
-          description="Identify and document three different plants in your area using photos and short observations."
+          description="Observe and document a plant in your local area using a photo, location and a short observation."
           requiresPhoto
           requiresLocation
           offlineSupported
@@ -75,6 +76,7 @@ export default function ActivitiesScreen() {
         />
 
         <ActivityCard
+          testID="activity-community-button"
           category="COMMUNITY"
           title="Community Learning Observation"
           description="Observe an educational or community facility and record what you learned from the visit."

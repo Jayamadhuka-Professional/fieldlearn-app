@@ -87,35 +87,48 @@ export default function CompleteActivityScreen() {
   const activityRequiresLocation = id === 'plant-observation';
 
   async function openCamera() {
-  if (!cameraPermission?.granted) {
-    const permission = await requestCameraPermission();
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
 
-    if (!permission.granted) {
+      if (!permission.granted) {
+        Alert.alert(
+          'Camera permission required',
+          'FieldLearn needs camera access to capture activity evidence.'
+        );
+        return;
+      }
+    }
+
+    setCameraVisible(true);
+  }
+
+  async function takePhoto() {
+    if (!cameraRef.current) {
       Alert.alert(
-        'Camera permission required',
-        'FieldLearn needs camera access to capture activity evidence.'
+        'Camera unavailable',
+        'The camera is not ready. Please try again.'
       );
       return;
     }
+
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.7,
+      });
+
+      if (photo?.uri) {
+        setPhotoUri(photo.uri);
+        setCameraVisible(false);
+      }
+    } catch (error) {
+      console.error('Failed to capture photo:', error);
+
+      Alert.alert(
+        'Photo failed',
+        'FieldLearn could not capture the photo. Please try again.'
+      );
+    }
   }
-
-  setCameraVisible(true);
-}
-
-async function takePhoto() {
-  if (!cameraRef.current) {
-    return;
-  }
-
-  const photo = await cameraRef.current.takePictureAsync({
-    quality: 0.7,
-  });
-
-  if (photo?.uri) {
-    setPhotoUri(photo.uri);
-    setCameraVisible(false);
-  }
-}
   
   async function captureLocation() {
     try {
@@ -138,10 +151,13 @@ async function takePhoto() {
 
         setLocation(currentLocation);
     } catch (error) {
-        Alert.alert(
+
+      console.error('Failed to capture location:', error);
+
+      Alert.alert(
         'Location error',
         'Unable to capture your current location. Please make sure GPS is enabled and try again.'
-        );
+      );
     } finally {
         setLocationLoading(false);
     }
@@ -300,6 +316,8 @@ async function takePhoto() {
         <Text style={styles.label}>Your Observation</Text>
 
         <TextInput
+          testID="activity-observation-input"
+          accessibilityLabel="Activity Observation"
           style={styles.textArea}
           placeholder="Describe what you observed and learned..."
           placeholderTextColor="#9CA3AF"
@@ -318,9 +336,11 @@ async function takePhoto() {
           </Text>
 
           <Pressable
+            testID="activity-photo-button"
+            accessibilityLabel={photoUri ? 'Retake Photo' : 'Add Photo'}
             style={styles.secondaryButton}
             onPress={openCamera}
-            >
+          >
             <Text style={styles.secondaryButtonText}>
                 {photoUri ? '📷 Retake Photo' : '📷 Add Photo'}
             </Text>
@@ -344,10 +364,12 @@ async function takePhoto() {
               </Text>
 
               <Pressable
+                testID="activity-location-button"
+                accessibilityLabel="Capture Location"
                 style={styles.secondaryButton}
                 onPress={captureLocation}
                 disabled={locationLoading}
-                >
+              >
                 <Text style={styles.secondaryButtonText}>
                     {locationLoading
                     ? 'Getting Location...'
@@ -395,6 +417,8 @@ async function takePhoto() {
         </View>
 
         <Pressable
+          testID="activity-save-draft-button"
+          accessibilityLabel="Save as Draft"
           style={({ pressed }) => [
             styles.draftButton,
             pressed && styles.buttonPressed,
@@ -405,6 +429,8 @@ async function takePhoto() {
         </Pressable>
 
         <Pressable
+          testID="activity-save-progress-button"
+          accessibilityLabel="Save Progress"
           style={({ pressed }) => [
             styles.saveButton,
             pressed && styles.buttonPressed,
@@ -429,15 +455,19 @@ async function takePhoto() {
 
             <View style={styles.cameraControls}>
             <Pressable
-                style={styles.cancelCameraButton}
-                onPress={() => setCameraVisible(false)}
+              testID="camera-cancel-button"
+              accessibilityLabel="Cancel Camera"
+              style={styles.cancelCameraButton}
+              onPress={() => setCameraVisible(false)}
             >
                 <Text style={styles.cameraButtonText}>Cancel</Text>
             </Pressable>
 
             <Pressable
-                style={styles.captureButton}
-                onPress={takePhoto}
+              testID="camera-capture-button"
+              accessibilityLabel="Capture Photo"
+              style={styles.captureButton}
+              onPress={takePhoto}
             >
                 <View style={styles.captureInner} />
             </Pressable>

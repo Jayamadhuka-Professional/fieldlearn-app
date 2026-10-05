@@ -1,10 +1,10 @@
 import NetInfo from '@react-native-community/netinfo';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import {
-    ActivitySubmission,
-    getPendingSubmissions,
-    markSubmissionAsSynced,
+  ActivitySubmission,
+  getPendingSubmissions,
+  markSubmissionAsSynced,
 } from '@/services/database';
 
 import { firestore } from '@/services/firebase';
@@ -12,26 +12,24 @@ import { firestore } from '@/services/firebase';
 async function uploadSubmissionToFirestore(
   submission: ActivitySubmission
 ) {
-  const document = await addDoc(
-    collection(firestore, 'activitySubmissions'),
-    {
-      localId: submission.id,
-      activityId: submission.activityId,
-      observation: submission.observation,
-
-      // This is currently a local device URI.
-      // Actual photo cloud upload will be handled separately.
-      photoUri: submission.photoUri,
-
-      latitude: submission.latitude,
-      longitude: submission.longitude,
-
-      createdAt: submission.createdAt,
-      syncedAt: serverTimestamp(),
-    }
+  const documentRef = doc(
+    firestore,
+    'activitySubmissions',
+    `submission-${submission.id}`
   );
 
-  return document.id;
+  await setDoc(documentRef, {
+    localId: submission.id,
+    activityId: submission.activityId,
+    observation: submission.observation,
+    photoUri: submission.photoUri,
+    latitude: submission.latitude,
+    longitude: submission.longitude,
+    createdAt: submission.createdAt,
+    syncedAt: serverTimestamp(),
+  });
+
+  return documentRef.id;
 }
 
 export async function syncPendingSubmissions() {

@@ -28,21 +28,30 @@ export async function initializeDatabase() {
       latitude REAL,
       longitude REAL,
       sync_status TEXT NOT NULL DEFAULT 'PENDING',
+      submission_status TEXT NOT NULL DEFAULT 'COMPLETED',
       created_at TEXT NOT NULL
     );
   `);
 
-   try {
+  // Migration support for older FieldLearn databases
+  const columns = await db.getAllAsync<{ name: string }>(
+    `PRAGMA table_info(activity_submissions);`
+  );
+
+  const hasSubmissionStatus = columns.some(
+    (column) => column.name === 'submission_status'
+  );
+
+  if (!hasSubmissionStatus) {
     await db.execAsync(`
       ALTER TABLE activity_submissions
       ADD COLUMN submission_status TEXT NOT NULL DEFAULT 'COMPLETED';
     `);
 
-    console.log('submission_status column added.');
-  } catch (error) {
-    // Expected when the column already exists.
-    console.log('submission_status column already exists.');
+    console.log('Database migrated: submission_status column added.');
   }
+
+  console.log('FieldLearn database ready.');
 }
 
 export async function saveActivitySubmission(

@@ -3,7 +3,6 @@ import {
   getAllSubmissions,
   getSubmissionCounts,
 } from '@/services/database';
-import { syncPendingSubmissions } from '@/services/sync';
 import NetInfo from '@react-native-community/netinfo';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -42,9 +41,6 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    let syncTimer: ReturnType<typeof setTimeout> | null = null;
-    let wasOnline = false;
-
     const unsubscribe = NetInfo.addEventListener((state) => {
       const online =
         state.isConnected === true &&
@@ -56,48 +52,12 @@ export default function HomeScreen() {
       });
 
       setIsOnline(online);
-
-      // Only trigger automatic sync when connection changes
-      // from offline -> online
-      if (online && !wasOnline) {
-        console.log('Internet connection restored.');
-
-        if (syncTimer) {
-          clearTimeout(syncTimer);
-        }
-
-        syncTimer = setTimeout(async () => {
-          try {
-            console.log('Starting automatic synchronization...');
-
-            const result = await syncPendingSubmissions();
-
-            console.log('Automatic sync result:', result);
-
-            await loadProgressCounts();
-
-            if (result.syncedCount > 0) {
-              console.log(
-                `${result.syncedCount} submission(s) automatically synced.`
-              );
-            }
-          } catch (error) {
-            console.error('Automatic synchronization failed:', error);
-          }
-        }, 3000);
-      }
-
-      wasOnline = online;
     });
 
     return () => {
       unsubscribe();
-
-      if (syncTimer) {
-        clearTimeout(syncTimer);
-      }
     };
-  }, [loadProgressCounts]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -134,6 +94,8 @@ export default function HomeScreen() {
           </Text>
 
           <Pressable
+            testID="home-view-activities-button"
+            accessibilityLabel="View Activities"
             style={styles.primaryButton}
             onPress={() => router.push('/activities')}
           >
@@ -153,7 +115,10 @@ export default function HomeScreen() {
           />
 
           <View style={styles.syncTextContainer}>
-            <Text style={styles.syncTitle}>
+            <Text
+              testID="home-network-status"
+              style={styles.syncTitle}
+            >
               {isOnline ? "You're online" : "You're offline"}
             </Text>
 
@@ -167,7 +132,11 @@ export default function HomeScreen() {
 
         {/* Progress */}
         <Text style={styles.sectionTitle}>Your Progress</Text>
-        <Pressable onPress={() => router.push('/progress')}>
+        <Pressable
+          testID="home-progress-button"
+          accessibilityLabel="Your Progress"
+          onPress={() => router.push('/progress')}
+        >
           <View style={styles.progressCard}>
             <View style={styles.progressRow}>
               <View>
